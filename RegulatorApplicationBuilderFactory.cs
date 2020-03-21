@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace WebApplication3
 {
-    public class PlatformApplicationBuilderFactory : IApplicationBuilderFactory
+    public class RegulatorApplicationBuilderFactory : IApplicationBuilderFactory
     {
         private readonly IApplicationBuilderFactory instance;
 
-        public PlatformApplicationBuilderFactory(IApplicationBuilderFactory instance)
+        public RegulatorApplicationBuilderFactory(IApplicationBuilderFactory instance)
             => this.instance = instance;
 
         public IApplicationBuilder CreateBuilder(IFeatureCollection serverFeatures)
-            => new PlatformApplicationBuilder(instance.CreateBuilder(serverFeatures));
+            => new RegulatorApplicationBuilder(instance.CreateBuilder(serverFeatures));
     }
 }

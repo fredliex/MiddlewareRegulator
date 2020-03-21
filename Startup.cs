@@ -26,22 +26,22 @@ namespace WebApplication3
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMiddlewareRegulator((appBuilder, middlewares) =>
+            services.AddMiddlewareRegulator(appBuilder =>
             {
-                var staticFileMiddleware = middlewares.Find<StaticFileMiddleware>();
+                var staticFileMiddleware = appBuilder.Find<StaticFileMiddleware>();
                 if (staticFileMiddleware == null) 
                 {
                     appBuilder.UseStaticFiles();
-                    staticFileMiddleware = middlewares.Find<StaticFileMiddleware>();
+                    staticFileMiddleware = appBuilder.Find<StaticFileMiddleware>();
                 }
-                middlewares.Remove(staticFileMiddleware);
-                middlewares.Insert(0, staticFileMiddleware);
+                appBuilder.Remove(staticFileMiddleware);
+                appBuilder.Insert(0, staticFileMiddleware);
             });
 
-            services.AddMiddlewareRegulator((appBuilder, middlewares) =>
+            services.AddMiddlewareRegulator(appBuilder =>
             {
-                var developerExceptionPageMiddleware = middlewares.Find<DeveloperExceptionPageMiddleware>();
-                if (developerExceptionPageMiddleware != null) middlewares.Remove(developerExceptionPageMiddleware);
+                var developerExceptionPageMiddleware = appBuilder.Find<DeveloperExceptionPageMiddleware>();
+                if (developerExceptionPageMiddleware != null) appBuilder.Remove(developerExceptionPageMiddleware);
             });
 
             services.AddControllersWithViews();

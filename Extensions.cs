@@ -12,15 +12,15 @@ namespace WebApplication3
 {
     public static class MiddlewareRegulatorExtensions
     {
-        public static IServiceCollection AddMiddlewareRegulator(this IServiceCollection services, Action<IApplicationBuilder, MiddlewareMetadataCollection> regulateAction)
+        public static IServiceCollection AddMiddlewareRegulator(this IServiceCollection services, Action<IRegulatorApplicationBuilder> regulateAction)
         {
-            services.EnsurePlatformApplicationBuilderFactory();
+            services.EnsureRegulatorApplicationBuilderFactory();
             return services.AddTransient(sp => new MiddlewareRegulator(regulateAction));
         }
             
-        private static void EnsurePlatformApplicationBuilderFactory(this IServiceCollection services)
+        private static void EnsureRegulatorApplicationBuilderFactory(this IServiceCollection services)
         {
-            var markDescriptor = services.FirstOrDefault(n => n.ServiceType == typeof(PlatformApplicationBuilderFactory));
+            var markDescriptor = services.FirstOrDefault(n => n.ServiceType == typeof(RegulatorApplicationBuilderFactory));
             if (markDescriptor != null) return;
 
             var oriDescriptor = services.LastOrDefault(n => n.ServiceType == typeof(IApplicationBuilderFactory)) ??
@@ -28,15 +28,15 @@ namespace WebApplication3
             var instanceFactory =
                 oriDescriptor.ImplementationInstance != null ? _ => oriDescriptor.ImplementationInstance :
                 oriDescriptor.ImplementationFactory ?? (sp => ActivatorUtilities.CreateInstance(sp, oriDescriptor.ImplementationType));
-            PlatformApplicationBuilderFactory impFactory(IServiceProvider sp)
-                => new PlatformApplicationBuilderFactory((IApplicationBuilderFactory)instanceFactory(sp));
+            RegulatorApplicationBuilderFactory impFactory(IServiceProvider sp)
+                => new RegulatorApplicationBuilderFactory((IApplicationBuilderFactory)instanceFactory(sp));
             var newDescriptor = ServiceDescriptor.Describe(typeof(IApplicationBuilderFactory), impFactory, oriDescriptor.Lifetime);
 
             services.Add(newDescriptor);
             services.AddTransient(impFactory);
         }
 
-        public static MiddlewareMetadata Find<TMiddleware>(this MiddlewareMetadataCollection middlewares)
+        public static MiddlewareMetadata Find<TMiddleware>(this IEnumerable<MiddlewareMetadata> middlewares)
             => middlewares.FirstOrDefault(n => n.Type == typeof(TMiddleware));
     }
 }

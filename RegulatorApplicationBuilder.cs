@@ -9,22 +9,11 @@ using System.Threading.Tasks;
 
 namespace WebApplication3
 {
-    public partial class PlatformApplicationBuilder : IApplicationBuilder
+    public partial class RegulatorApplicationBuilder : List<MiddlewareMetadata>, IRegulatorApplicationBuilder
     {
         private readonly IApplicationBuilder instance;
-        private readonly MiddlewareMetadataCollection metadatas;
-        private readonly Func<RequestDelegate, RequestDelegate> typeResolverMiddleware;
 
-        public PlatformApplicationBuilder(IApplicationBuilder instance)
-        {
-            this.instance = instance;
-            metadatas = new MiddlewareMetadataCollection(this);
-
-            // init probeDelegate
-            this.UseMiddleware<MiddlewareTypeResolverMiddlareware>();
-            typeResolverMiddleware = metadatas[0].Middleware;
-            metadatas.Clear();
-        }
+        public RegulatorApplicationBuilder(IApplicationBuilder instance) => this.instance = instance;
 
         public IServiceProvider ApplicationServices
         { 
@@ -36,16 +25,16 @@ namespace WebApplication3
 
         public IFeatureCollection ServerFeatures => instance.ServerFeatures;
 
-        public IApplicationBuilder New() => new PlatformApplicationBuilder(instance.New());
+        public IApplicationBuilder New() => new RegulatorApplicationBuilder(instance.New());
 
         public RequestDelegate Build()
         {
             foreach (var regulator in ApplicationServices.GetServices<MiddlewareRegulator>())
             {
-                regulator.Regulate(this, metadatas);
+                regulator.Regulate(this);
             }
             var app = instance.Build();
-            foreach (var meta in metadatas.AsEnumerable().Reverse())
+            foreach (var meta in this.AsEnumerable().Reverse())
             {
                 app = meta.Middleware(app);
             }
@@ -54,15 +43,17 @@ namespace WebApplication3
 
         public IApplicationBuilder Use(Func<RequestDelegate, RequestDelegate> middleware)
         {
-            metadatas.Add(metadatas.CreateMetadata(middleware));
+            Add(new MiddlewareMetadata(GetMiddlewareType(middleware), middleware));
             return this;
         }
 
-        internal Type GetMiddlewareType(Func<RequestDelegate, RequestDelegate> middleware)
+        private static RequestDelegate ResolveMiddleware(RequestDelegate middleware)
+            => _ => Task.FromResult(middleware.Target.GetType());
+
+        private Type GetMiddlewareType(Func<RequestDelegate, RequestDelegate> middleware)
         {
-            if (typeResolverMiddleware == null) return null;
             var app = middleware(context => null);
-            app = typeResolverMiddleware(middleware(context => null));
+            app = ResolveMiddleware(middleware(context => null));
             return ((Task<Type>)app.Invoke(null)).Result;
         }
     }

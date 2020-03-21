@@ -7,12 +7,12 @@ namespace WebApplication3
 {
     public class MiddlewareRegulator
     {
-        private readonly Action<IApplicationBuilder, MiddlewareMetadataCollection> regulateAction;
+        private readonly Action<IRegulatorApplicationBuilder> regulateAction;
 
-        public MiddlewareRegulator(Action<IApplicationBuilder, MiddlewareMetadataCollection> regulateAction)
+        public MiddlewareRegulator(Action<IRegulatorApplicationBuilder> regulateAction)
             => this.regulateAction = regulateAction;
 
-        public void Regulate(IApplicationBuilder applicationBuilder, MiddlewareMetadataCollection middlewares)
-            => regulateAction(applicationBuilder, middlewares);
+        public void Regulate(IRegulatorApplicationBuilder regulatorApplicationBuilder)
+            => regulateAction(regulatorApplicationBuilder);
     }
 }
