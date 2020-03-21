@@ -52,8 +52,8 @@ namespace WebApplication3
 
         private Type GetMiddlewareType(Func<RequestDelegate, RequestDelegate> middleware)
         {
-            var app = middleware(context => null);
-            app = ResolveMiddleware(middleware(context => null));
+            var app = middleware(_ => null);
+            app = ResolveMiddleware(app);
             return ((Task<Type>)app.Invoke(null)).Result;
         }
     }
